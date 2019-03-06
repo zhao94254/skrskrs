@@ -7,7 +7,7 @@
 # 处理请求相关
 
 import requests
-from requests import sessions
+from requests_html import HTMLSession
 import random
 from config import PROXY as proxy
 from plogger import get_logger
@@ -192,7 +192,7 @@ def ua():
     ]
     return random.choice(headers_list)
 
-class Msession(sessions.Session):
+class Msession(HTMLSession):
 
     def __init__(self, nproxy=False):
         super(Msession, self).__init__()
@@ -210,3 +210,7 @@ class Msession(sessions.Session):
             'http': 'socks5://' + p,
             'https': 'socks5://' + p
         }
+
+if __name__ == '__main__':
+    st = Msession().get('https://www.97up.cn')
+    print(st)
