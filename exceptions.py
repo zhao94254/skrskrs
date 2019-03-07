@@ -4,6 +4,7 @@
 # @Author  : zpy
 # @Software: PyCharm
 
+
 class SpiderException(Exception):
     """ 根据不同的 Error code来进行不同的判断,
         重试 3
@@ -32,6 +33,9 @@ class SpiderException(Exception):
 
     __repr__ = __str__
 
+
+class ModelError(Exception):
+    pass
 
 if __name__ == '__main__':
     s = SpiderException(SpiderException.DEFAULT, 'wtf')
