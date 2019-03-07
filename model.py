@@ -7,8 +7,9 @@
 # 定义数据结构，对结果进行检查
 
 from exceptions import ModelError
+from collections import OrderedDict
 
-class SDict(dict):
+class SDict(OrderedDict):
 
     def __getattr__(self, item):
         return self.get(item)
@@ -43,9 +44,12 @@ class BaseModel:
     def check(self):
         self._check_mds()
 
-    def sql(self):
-        return "insert into {table} {keys} values{}"
+    def sql(self, table):
+        fmtsql = "insert into {table} {keys} values({values})".format(table=table, keys=','.join(self.res.keys()),
+                                                             values='%s,' * len(self.res))
 
+
+        return fmtsql % tuple(self.res.values())
 
 if __name__ == '__main__':
     # s = SDict()
@@ -55,3 +59,4 @@ if __name__ == '__main__':
     tmodel = BaseModel([('name', str), ('age', int)])
     tmodel.res.ks = 2
     print(tmodel.res)
+    print(tmodel.sql('skr.skr'))
