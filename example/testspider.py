@@ -4,7 +4,7 @@
 # @Author  : zpy
 # @Software: PyCharm
 
-from pspider import Pspider, req
+from spider.pspider import Pspider, req
 
 
 

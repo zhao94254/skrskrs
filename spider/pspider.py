@@ -6,11 +6,11 @@
 
 import abc
 from abc import ABCMeta
-from plogger import get_logger, func_time_logger
+from spider.plogger import get_logger, func_time_logger
 from exceptions import SpiderException
 from requests.exceptions import Timeout
 from collections import deque
-from prequest import Msession
+from spider.prequest import Msession
 
 log = get_logger('pspider')
 

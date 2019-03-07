@@ -10,7 +10,7 @@ import requests
 from requests_html import HTMLSession
 import random
 from config import PROXY as proxy
-from plogger import get_logger
+from spider.plogger import get_logger
 
 log  = get_logger('prequest')
 
