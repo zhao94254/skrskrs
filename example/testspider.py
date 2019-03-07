@@ -28,7 +28,9 @@ class SiteSpider(Pspider):
 
     def parse_data(self, resp):
         html = resp.content
+        return 'skr'
 
 if __name__ == '__main__':
     sp = SiteSpider()
     sp.start()
+    print(sp.result)

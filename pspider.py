@@ -20,6 +20,9 @@ log = get_logger('pspider')
 
 class Pspider(metaclass=ABCMeta):
 
+    def __init__(self):
+        self.result = []
+
     @abc.abstractmethod
     def task(self):
         pass
@@ -31,6 +34,7 @@ class Pspider(metaclass=ABCMeta):
     def start(self):
         for func in self.req_resp():
             func.run()
+            self.result.extend(func.result)
 
 def req(retry=3, proxy=False, timeout=30, concurren=1):
     """ 通过装饰器来给出可选的配置。 """
