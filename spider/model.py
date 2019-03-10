@@ -8,7 +8,7 @@
 
 from exceptions import ModelError
 from collections import OrderedDict
-from copy import deepcopy
+from copy import deepcopy, copy
 
 class SDict(OrderedDict):
 
@@ -29,6 +29,7 @@ class BaseModel:
         self.mds_map = {}
         self.res = SDict()
         self.check()
+        self.buffer = []
 
     def _check_mds(self):
         for i in self.mds:
@@ -45,17 +46,51 @@ class BaseModel:
     def check(self):
         self._check_mds()
 
-    def sql(self, table):
+    def export_sql(self, table):
+        """
+        导出sql
+        :param table:
+        :return:
+        """
         fmtsql = "insert into {table} {keys} values({values})".format(table=table, keys=','.join(self.res.keys()),
                                                              values='%s,' * len(self.res))
 
+        for data in self.buffer:
+            yield fmtsql % tuple(data.values())
 
-        return fmtsql % tuple(self.res.values())
+    def export_csv(self):
+        """
+        导出csv 格式
+        :return:
+        """
+        yield ",".join(self.res.keys())
+        for data in self.buffer:
+            yield ",".join(data.values())
 
-    def export(self):
-        return deepcopy(self)
+    def export_csvfile(self, filepath):
+        """
+        导出csv文件
+        :param filepath:
+        :return:
+        """
+        with open(filepath, 'w') as f:
+            for d in self.export_csv():
+                f.writelines(d)
 
+    def export_tuple(self):
+        """
+        导出元组
+        :return:
+        """
+        for data in self.buffer:
+            yield tuple(data.values())
 
+    def save(self):
+        """
+        将数据先缓存到model 实例中
+        :return:
+        """
+        self.buffer.append(copy(self.res))
 
 if __name__ == '__main__':
     # s = SDict()
@@ -65,4 +100,3 @@ if __name__ == '__main__':
     tmodel = BaseModel([('name', str), ('age', int)])
     tmodel.res.ks = 2
     print(tmodel.res)
-    print(tmodel.sql('skr.skr'))
