@@ -26,7 +26,6 @@ class LagouSpider(Pspider):
         yield pages
 
     def parse_data(self, resp):
-        res = []
         lmodel = BaseModel([('company', str), ('companyid', str), ('positionname', str), ('salary', str), ('require', str)])
         for d in resp.html.xpath('//*[@id="s_position_list"]/ul/li'):
             lmodel.res.require = ''.join(d.xpath('//div[1]/div[1]/div[2]/div/text()'))
@@ -34,8 +33,8 @@ class LagouSpider(Pspider):
             lmodel.res.companyid = d.attrs.get('data-companyid')
             lmodel.res.salary = d.attrs.get('data-salary')
             lmodel.res.positionname = d.attrs.get('data-positionname')
-            res.append(lmodel.export())
-        return res
+            lmodel.save()
+        return lmodel
 
 class SiteSpider(Pspider):
 
@@ -62,4 +61,7 @@ class SiteSpider(Pspider):
 if __name__ == '__main__':
     sp = LagouSpider()
     sp.start()
-    print(sp.result)
+    for wdata in sp.result:
+        for s in wdata.export_sql('test.test'):
+            print(s)
+        wdata.export_csvfile('/Users/mioji/Desktop/newpy/pspider/example/lagoutest.csv')
