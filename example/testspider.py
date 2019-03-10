@@ -22,6 +22,7 @@ class LagouSpider(Pspider):
             },
                 "response": {
                     "handler": self.parse_data,
+                    "result_tag": 'job'
                 }}
         yield pages
 
@@ -39,11 +40,11 @@ class LagouSpider(Pspider):
 class SiteSpider(Pspider):
 
     def task(self):
-        return "https://www.97up.cn"
+        return "https://www.google.com"
 
     def req_resp(self):
 
-        @req()
+        @req(timeout=2)
         def first_page():
             url = self.task()
             return {"request":{
@@ -59,9 +60,11 @@ class SiteSpider(Pspider):
         return 'skr'
 
 if __name__ == '__main__':
+    # sp = SiteSpider()
+    # sp.start()
     sp = LagouSpider()
     sp.start()
-    for wdata in sp.result:
-        for s in wdata.export_sql('test.test'):
-            print(s)
-        wdata.export_csvfile('/Users/mioji/Desktop/newpy/pspider/example/lagoutest.csv')
+
+    for s in sp.result['job'].export_sql('test.test'):
+        print(s)
+    sp.result['job'].export_csvfile('/Users/mioji/Desktop/newpy/pspider/example/lagoutest.csv')
