@@ -75,8 +75,10 @@ class BaseModel:
         :return:
         """
         with open(filepath, 'w') as f:
-            for d in self.export_csv():
-                f.write(d)
+            csvw = csv.writer(f)
+            csvw.writerow(self.res.keys())
+            for d in self.buffer:
+                csvw.writerow(d.values())
 
     def export_tuple(self):
         """
