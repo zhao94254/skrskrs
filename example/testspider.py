@@ -10,10 +10,12 @@ from spider.model import BaseModel
 class LagouSpider(Pspider):
 
     def task(self):
-        return "https://www.lagou.com/zhaopin/Python/"
+        for i in range(1, 30):
+            yield "https://www.lagou.com/zhaopin/Python/{}".format(i)
 
     def req_resp(self):
-
+        self.jobmodel = BaseModel(
+            [('company', str), ('companyid', str), ('positionname', str), ('salary', str), ('require', str)])
         @req()
         def pages():
             url = self.task()
@@ -27,15 +29,15 @@ class LagouSpider(Pspider):
         yield pages
 
     def parse_data(self, resp):
-        lmodel = BaseModel([('company', str), ('companyid', str), ('positionname', str), ('salary', str), ('require', str)])
+
         for d in resp.html.xpath('//*[@id="s_position_list"]/ul/li'):
-            lmodel.res.require = ''.join(d.xpath('//div[1]/div[1]/div[2]/div/text()'))
-            lmodel.res.company = d.attrs.get('data-company')
-            lmodel.res.companyid = d.attrs.get('data-companyid')
-            lmodel.res.salary = d.attrs.get('data-salary')
-            lmodel.res.positionname = d.attrs.get('data-positionname')
-            lmodel.save()
-        return lmodel
+            self.jobmodel.res.require = ''.join(d.xpath('//div[1]/div[1]/div[2]/div/text()'))
+            self.jobmodel.res.company = d.attrs.get('data-company')
+            self.jobmodel.res.companyid = d.attrs.get('data-companyid')
+            self.jobmodel.res.salary = d.attrs.get('data-salary')
+            self.jobmodel.res.positionname = d.attrs.get('data-positionname')
+            self.jobmodel.save()
+        return self.jobmodel
 
 class SiteSpider(Pspider):
 
