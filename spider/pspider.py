@@ -171,7 +171,6 @@ class ReqParse:
             if len(urls) == 0:
                 self.pspider.brower.close() # 释放链接
                 break
-            return
 
     def run(self):
         """.返回列表数据"""
