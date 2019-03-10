@@ -163,7 +163,7 @@ class ReqParse:
                 log.info("请求 {} 无数据返回".format(u))
             else:
                 parsed = self.handler(resp) # handler函数最后可能返回 list str dict
-                if isinstance(parsed, list):
+                if isinstance(parsed, list): # todo 按照不同的handler进行分类
                     self.result.extend(parsed)
                 else:
                     self.result.append(parsed)          # 在这里最后返回一层的列表
