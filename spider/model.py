@@ -8,7 +8,7 @@
 
 from exceptions import ModelError
 from collections import OrderedDict
-from copy import copy
+from copy import deepcopy
 
 class SDict(OrderedDict):
 
@@ -53,7 +53,9 @@ class BaseModel:
         return fmtsql % tuple(self.res.values())
 
     def export(self):
-        return copy(self.res)
+        return deepcopy(self)
+
+
 
 if __name__ == '__main__':
     # s = SDict()
