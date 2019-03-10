@@ -8,7 +8,7 @@ import abc
 from abc import ABCMeta
 from spider.plogger import get_logger, func_time_logger
 from exceptions import SpiderException
-from requests.exceptions import Timeout
+from requests.exceptions import Timeout, ConnectionError
 from collections import deque
 from spider.prequest import Msession
 
@@ -21,7 +21,8 @@ log = get_logger('pspider')
 class Pspider(metaclass=ABCMeta):
 
     def __init__(self):
-        self.result = []
+        self.result = {}
+        self.session = None
 
     @abc.abstractmethod
     def task(self):
@@ -32,9 +33,25 @@ class Pspider(metaclass=ABCMeta):
         pass
 
     def start(self):
-        for func in self.req_resp():
-            func.run()
-            self.result.extend(func.result)
+        for worker in self.req_resp():
+            worker.pspider = self
+            worker.run()
+
+    @property
+    def brower(self):
+        if self.session is None:
+            self.session = Msession()
+        return self.session
+
+    def reset_brower(self):
+        """
+        重置session
+        :return:
+        """
+        log.info("重置Session")
+        self.brower.close()
+        self.session = None
+
 
 def req(retry=3, proxy=False, timeout=30, concurren=1):
     """ 通过装饰器来给出可选的配置。 """
@@ -65,7 +82,7 @@ class ReqParse:
         self.timeout = timeout
         self.concurren = concurren
         self.session = None
-        self.result = []
+        self.pspider = None
 
     def parse_func(self):
         """ 放置请求的函数和处理返回的函数
@@ -84,9 +101,10 @@ class ReqParse:
         if 'request' in r and 'response' in r:
             _req = r['request']
             _resp = r['response']
-            if 'url' not in _req or 'handler' not in _resp:
+            if 'url' not in _req or 'handler' not in _resp or 'result_tag' not in _resp: # 添加result_tag
                 raise SpiderException(SpiderException.TASKERROR)
             else:
+                self.result_tag = _resp['result_tag']
                 self.urls = _req['url']
                 self.kw = _req['kw'] if 'kw' in _req else {}
                 self.handler = func_time_logger(_resp['handler'])
@@ -99,22 +117,6 @@ class ReqParse:
         else:
             raise SpiderException(SpiderException.TASKERROR)
 
-    @property
-    def brower(self):
-        if self.session is None:
-            self.session = Msession()
-        return self.session
-
-    def reset_brower(self):
-        """
-        重置session
-        :return:
-        """
-        self.brower.close()
-        self.session = None
-
-
-
     @func_time_logger
     def _spider_run(self, url):
         """ 执行真正的请求。控制代理， 超时等设置。。"""
@@ -124,16 +126,16 @@ class ReqParse:
         while True:
             try:
                 if self.method == 'post':
-                    resp = self.brower.post(url, timeout=self.timeout, params=self.postdata)
+                    resp = self.pspider.brower.post(url, timeout=self.timeout, params=self.postdata)
                 elif self.method == 'get':
-                    resp = self.brower.get(url, timeout=self.timeout, **self.kw)
+                    resp = self.pspider.brower.get(url, timeout=self.timeout, **self.kw)
                 else:
                     raise SpiderException(SpiderException.DEFAULT, "不支持其它方法")
                 log.info("请求URL={}".format(url))
                 log.info("响应字段长度={}".format(len(resp.content)))
                 return resp
-            except Timeout:
-                self.reset_brower()
+            except (Timeout, ConnectionError):
+                self.pspider.reset_brower()
                 try_times += 1
                 log.info("重试 ip={} url={} retry={}".format(p, url, try_times))
                 if try_times >= self.retry:
@@ -163,12 +165,11 @@ class ReqParse:
                 log.info("请求 {} 无数据返回".format(u))
             else:
                 parsed = self.handler(resp) # handler函数最后可能返回 list str dict
-                if isinstance(parsed, list): # todo 按照不同的handler进行分类
-                    self.result.extend(parsed)
-                else:
-                    self.result.append(parsed)          # 在这里最后返回一层的列表
+                # 按照不同的handler进行分类
+                # 每个handler只对应一个model实例，一次任务的数据都存在此model实例中
+                self.pspider.result[self.result_tag] = parsed
             if len(urls) == 0:
-                self.brower.close() # 释放链接
+                self.pspider.brower.close() # 释放链接
                 break
             return
 
