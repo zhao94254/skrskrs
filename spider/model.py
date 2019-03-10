@@ -9,6 +9,7 @@
 from exceptions import ModelError
 from collections import OrderedDict
 from copy import deepcopy, copy
+import csv
 
 class SDict(OrderedDict):
 
@@ -65,7 +66,7 @@ class BaseModel:
         """
         yield ",".join(self.res.keys())
         for data in self.buffer:
-            yield ",".join(data.values())
+            yield ",".join(map(str, data.values()))
 
     def export_csvfile(self, filepath):
         """
@@ -75,7 +76,7 @@ class BaseModel:
         """
         with open(filepath, 'w') as f:
             for d in self.export_csv():
-                f.writelines(d)
+                f.write(d)
 
     def export_tuple(self):
         """
@@ -100,3 +101,12 @@ if __name__ == '__main__':
     tmodel = BaseModel([('name', str), ('age', int)])
     tmodel.res.ks = 2
     print(tmodel.res)
+    tmodel.save()
+
+    for s in tmodel.export_sql('test'):
+        print(s)
+
+    for s in tmodel.export_csv():
+        print(s)
+
+    tmodel.export_csvfile('/Users/mioji/Desktop/newpy/test.csv')
